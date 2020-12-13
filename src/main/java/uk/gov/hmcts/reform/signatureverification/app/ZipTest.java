@@ -1,6 +1,7 @@
-package uk.gov.hmcts.reform.signaturevalidation;
+package uk.gov.hmcts.reform.signatureverification.app;
 
-import com.google.common.io.ByteStreams;
+import uk.gov.hmcts.reform.signatureverification.service.SignatureVerifier;
+import uk.gov.hmcts.reform.signatureverification.util.PublicKeyDecoder;
 
 import java.security.PublicKey;
 
@@ -16,9 +17,7 @@ public class ZipTest {
                         )
                 );
 
-        var fis = ZipTest.class.getClassLoader().getResourceAsStream("98902762223112414856442_08-10-2018-05-50-07/envelope.zip");
-        var signature = ByteStreams.toByteArray(ZipTest.class.getClassLoader().getResourceAsStream("98902762223112414856442_08-10-2018-05-50-07/signature"));
-
-        ZipVerifiers.verifyZip(fis, signature, publicKey);
+        new SignatureVerifier().verifySignature(publicKey, "small");
+        new SignatureVerifier().verifySignature(publicKey, "big");
     }
 }

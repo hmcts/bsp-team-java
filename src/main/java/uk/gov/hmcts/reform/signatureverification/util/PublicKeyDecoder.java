@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.signaturevalidation;
+package uk.gov.hmcts.reform.signatureverification.util;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
