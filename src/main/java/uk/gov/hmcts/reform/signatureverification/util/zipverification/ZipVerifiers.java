@@ -55,9 +55,10 @@ public class ZipVerifiers {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
 
+            byte[] envelopeData = new byte[1024];
             while (data.available() != 0) {
-                var b = (byte) data.read();
-                signature.update(b);
+                int numBytesRead = data.readNBytes(envelopeData, 0, 1024);
+                signature.update(envelopeData, 0, numBytesRead);
             }
 
             if (!signature.verify(signed)) {
