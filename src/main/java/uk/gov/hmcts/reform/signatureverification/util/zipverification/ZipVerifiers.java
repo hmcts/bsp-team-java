@@ -16,7 +16,8 @@ public class ZipVerifiers {
     public static final String ENVELOPE = "envelope.zip";
     public static final String SIGNATURE = "signature";
 
-    public static final String INVALID_SIGNATURE_MESSAGE = "Zip signature failed verification";
+    private static final String INVALID_SIGNATURE_MESSAGE = "Zip signature failed verification";
+    private static final int BUFFER_SIZE = 1024;
 
     private ZipVerifiers() {
     }
@@ -55,9 +56,10 @@ public class ZipVerifiers {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
 
+            byte[] envelopeData = new byte[BUFFER_SIZE];
             while (data.available() != 0) {
-                var b = (byte) data.read();
-                signature.update(b);
+                int numBytesRead = data.readNBytes(envelopeData, 0, envelopeData.length);
+                signature.update(envelopeData, 0, numBytesRead);
             }
 
             if (!signature.verify(signed)) {
