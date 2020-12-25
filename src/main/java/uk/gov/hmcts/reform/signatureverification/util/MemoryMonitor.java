@@ -16,4 +16,16 @@ public class MemoryMonitor {
 
         return mem.getUsed();
     }
+
+    public long getHeapCommitted() {
+        MemoryUsage mem = memBean.getHeapMemoryUsage();
+
+        return mem.getCommitted();
+    }
+
+    public long getHeapMax() {
+        MemoryUsage mem = memBean.getHeapMemoryUsage();
+
+        return mem.getMax();
+    }
 }
