@@ -33,13 +33,8 @@ public final class ZipUtility {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
 
-            while (true) {
-                var b0 = data.read();
-                var b = (byte) b0;
-                if (b0 == Byte.MAX_VALUE + 1) {
-                    break;
-                }
-                signature.update(b0 == Byte.MAX_VALUE + 1 ? (byte) -1 : b);
+            while (data.available() > 0) {
+                signature.update((byte) data.read());
             }
 
             if (!signature.verify(signed)) {

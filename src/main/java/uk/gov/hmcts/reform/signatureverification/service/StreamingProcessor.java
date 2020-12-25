@@ -11,6 +11,9 @@ import java.net.URL;
 import java.security.PublicKey;
 
 public class StreamingProcessor {
+    private static final long DELAY = 1000L;
+    private static final long AVAILABILITY_DELAY_STEP = 10L;
+
     public void verifySignature(PublicKey publicKey, String folder) throws Exception {
         System.out.println("--------------------");
         System.out.println("Verifying folder: " + folder);
@@ -21,7 +24,11 @@ public class StreamingProcessor {
 
         var fis = new FileInputStream(envelopeFile);
 
-        StreamBuffer streamBuffer = new StreamBuffer(100000);
+        StreamBuffer streamBuffer = new StreamBuffer(
+                100000,
+                DELAY,
+                AVAILABILITY_DELAY_STEP
+        );
 
         MemoryMonitor memoryMonitor = new MemoryMonitor();
 
@@ -53,7 +60,11 @@ public class StreamingProcessor {
 
         var fis = new FileInputStream(envelopeFile);
 
-        StreamBuffer streamBuffer = new StreamBuffer(1000000);
+        StreamBuffer streamBuffer = new StreamBuffer(
+                100000,
+                DELAY,
+                AVAILABILITY_DELAY_STEP
+        );
 
         MemoryMonitor memoryMonitor = new MemoryMonitor();
 

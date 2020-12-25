@@ -6,15 +6,17 @@ import java.util.concurrent.TimeUnit;
 
 public class BufferOutputStream extends OutputStream {
     private final BlockingQueue<Integer> buffer;
+    private final long delay;
 
-    public BufferOutputStream(BlockingQueue<Integer> buffer) {
+    public BufferOutputStream(BlockingQueue<Integer> buffer, long delay) {
         this.buffer = buffer;
+        this.delay = delay;
     }
 
     @Override
     public void write(int b) {
         try {
-            buffer.offer(b, 100, TimeUnit.MILLISECONDS);
+            buffer.offer(b, delay, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
