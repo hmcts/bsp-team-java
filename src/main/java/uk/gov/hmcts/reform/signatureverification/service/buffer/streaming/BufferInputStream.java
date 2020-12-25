@@ -9,9 +9,6 @@ public class BufferInputStream extends InputStream {
     private final long delay;
     private final long availabilityDelayStep;
 
-    private int cnt = 0;
-    private int c = 0;
-
     public BufferInputStream(
             BlockingQueue<Integer> buffer,
             long delay,
@@ -40,12 +37,6 @@ public class BufferInputStream extends InputStream {
     public int read() {
         try {
             final Integer b = buffer.poll(delay, TimeUnit.MILLISECONDS);
-            cnt++;
-            c++;
-            if (c == 1000000) {
-                c = 0;
-                System.out.println("cnt: " + cnt);
-            }
             return b == null ? -1 : b;
         } catch (InterruptedException e) {
             throw new RuntimeException();
