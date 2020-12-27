@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.signatureverification.service.buffer.streaming;
+package uk.gov.hmcts.reform.signatureverification.service.buffer;
 
 import java.io.InputStream;
 import java.util.concurrent.BlockingQueue;
@@ -8,6 +8,8 @@ public class BufferInputStream extends InputStream {
     private final BlockingQueue<Integer> buffer;
     private final long delay;
     private final long availabilityDelayStep;
+    int cnt = 0;
+    int c = 0;
 
     public BufferInputStream(
             BlockingQueue<Integer> buffer,
@@ -37,7 +39,18 @@ public class BufferInputStream extends InputStream {
     public int read() {
         try {
             final Integer b = buffer.poll(delay, TimeUnit.MILLISECONDS);
-            return b == null ? -1 : b;
+            cnt++;
+            c++;
+            if (c == 1000000) {
+                System.out.println("Input stream cnt: " + cnt);
+                c = 0;
+            }
+            if (b == null) {
+                System.out.println("End input stream, cnt: " + cnt);
+                return -1;
+            } else {
+                return b;
+            }
         } catch (InterruptedException e) {
             throw new RuntimeException();
         }

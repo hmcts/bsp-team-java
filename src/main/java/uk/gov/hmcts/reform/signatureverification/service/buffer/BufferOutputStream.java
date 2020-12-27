@@ -1,4 +1,4 @@
-package uk.gov.hmcts.reform.signatureverification.service.buffer.streaming;
+package uk.gov.hmcts.reform.signatureverification.service.buffer;
 
 import java.io.OutputStream;
 import java.util.concurrent.BlockingQueue;

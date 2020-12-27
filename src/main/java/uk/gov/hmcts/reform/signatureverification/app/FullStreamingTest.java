@@ -19,9 +19,11 @@ public class FullStreamingTest {
 
         final StreamingProcessor streamingProcessor = new StreamingProcessor();
 
-        streamingProcessor.verifySignature(publicKey, "small");
-        streamingProcessor.parseZip("small");
-        streamingProcessor.verifySignature(publicKey, "big");
-        streamingProcessor.parseZip("big");
+        streamingProcessor.verifyBlob(publicKey, "small.zip");
+        streamingProcessor.verifyBlob(publicKey, "big.zip");
+//        streamingProcessor.verifySignature(publicKey, "small");
+//        streamingProcessor.parseZip("small");
+//        streamingProcessor.verifySignature(publicKey, "big");
+//        streamingProcessor.parseZip("big");
     }
 }
