@@ -1,12 +1,10 @@
 package uk.gov.hmcts.reform.signatureverification.service;
 
-import com.google.common.io.ByteStreams;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.hmcts.reform.signatureverification.service.buffer.StreamBuffer;
 import uk.gov.hmcts.reform.signatureverification.util.BlobUtility;
 import uk.gov.hmcts.reform.signatureverification.util.MemoryMonitor;
-import uk.gov.hmcts.reform.signatureverification.util.ZipUtility;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +14,7 @@ import java.security.PublicKey;
 public class StreamingProcessor {
     private static final Logger logger = LogManager.getLogger(StreamingProcessor.class);
 
+    private static final int STREAM_BUFFER_CAPACITY = 100000;
     private static final long DELAY_MS = 1000L;
     private static final long AVAILABILITY_DELAY_STEP_MS = 10L;
 
@@ -29,17 +28,17 @@ public class StreamingProcessor {
         URL blobUrl = ClassLoader.getSystemResource(blobName);
         File blob = new File(blobUrl.toURI());
 
-        StreamBuffer streamBuffer = new StreamBuffer(
+        StreamBuffer signatureReadingStreamBuffer = new StreamBuffer(
+                STREAM_BUFFER_CAPACITY,
+                DELAY_MS,
+                AVAILABILITY_DELAY_STEP_MS
+        );
+        StreamBuffer envelopeReadingStreamBuffer = new StreamBuffer(
                 100000,
                 DELAY_MS,
                 AVAILABILITY_DELAY_STEP_MS
         );
-        StreamBuffer streamBuffer1 = new StreamBuffer(
-                100000,
-                DELAY_MS,
-                AVAILABILITY_DELAY_STEP_MS
-        );
-        StreamBuffer streamBuffer2 = new StreamBuffer(
+        StreamBuffer envelopeVerificationStreamBuffer = new StreamBuffer(
                 100000,
                 DELAY_MS,
                 AVAILABILITY_DELAY_STEP_MS
@@ -51,94 +50,29 @@ public class StreamingProcessor {
 
         long t0 = System.nanoTime();
 
-        var fis = new FileInputStream(blob);
-        streamBuffer.copyToOutputStream(fis);
-        var signature = BlobUtility.getSignature(streamBuffer.getInputStream());
+        var signatureReadingBlobInputStream = new FileInputStream(blob);
+        signatureReadingStreamBuffer.copyToOutputStream(signatureReadingBlobInputStream);
+        var signature = BlobUtility.getSignature(signatureReadingStreamBuffer.getInputStream());
+
+        long t1 = System.nanoTime();
+        logger.info("Signature has been read from " + blobName + " in " + ((t1 - t0) / 1_000_000) + " ms");
         logger.info("Signature size: " + signature.length);
+        logger.info("Heap used after reading signature: " + memoryMonitor.getHeapUsed());
 
-        var fis1 = new FileInputStream(blob);
-        streamBuffer1.copyToOutputStream(fis1);
-        var envelope = BlobUtility.getEnvelope(streamBuffer1.getInputStream());
-        streamBuffer2.copyToOutputStream(envelope);
-        logger.info("Envelope has been got");
+        var envelopeReadingBlobInputStream = new FileInputStream(blob);
+        envelopeReadingStreamBuffer.copyToOutputStream(envelopeReadingBlobInputStream);
+        var envelope = BlobUtility.getEnvelope(envelopeReadingStreamBuffer.getInputStream());
+        envelopeVerificationStreamBuffer.copyToOutputStream(envelope);
 
-        zipProcessor.verifySignature(publicKey, streamBuffer2.getInputStream(), signature);
+        long t2 = System.nanoTime();
+        logger.info("Envelope has been read from " + blobName + " in " + ((t2 - t1) / 1_000_000) + " ms");
+        logger.info("Heap used after reading envelope: " + memoryMonitor.getHeapUsed());
 
-        logger.info("Heap used after verification: " + memoryMonitor.getHeapUsed());
+        zipProcessor.verifySignature(publicKey, envelopeVerificationStreamBuffer.getInputStream(), signature);
 
-        long t1 = System.nanoTime();
-        logger.info("Verified blob " + blobName + " in " + ((t1 - t0) / 1_000_000) + " ms");
-
-        logger.info("--------------------");
-    }
-
-    public void verifySignature(PublicKey publicKey, String folder) throws Exception {
-        logger.info("--------------------");
-        logger.info("Verifying folder: " + folder);
-        logger.info("--------------------");
-
-        URL envelopeUrl = ClassLoader.getSystemResource(folder + "/envelope.zip");
-        File envelopeFile = new File(envelopeUrl.toURI());
-
-        var fis = new FileInputStream(envelopeFile);
-
-        StreamBuffer streamBuffer = new StreamBuffer(
-                100000,
-                DELAY_MS,
-                AVAILABILITY_DELAY_STEP_MS
-        );
-
-        MemoryMonitor memoryMonitor = new MemoryMonitor();
-
-        logger.info("Verifying folder '" + folder + "' with streaming");
-        logger.info("Heap used before verification: " + memoryMonitor.getHeapUsed());
-
-        long t0 = System.nanoTime();
-
-        streamBuffer.copyToOutputStream(fis);
-
-        var signature = ByteStreams.toByteArray(StreamingProcessor.class.getClassLoader().getResourceAsStream(folder + "/signature"));
-        zipProcessor.verifySignature(publicKey, streamBuffer.getInputStream(), signature);
-
-        logger.info("Heap used after verification: " + memoryMonitor.getHeapUsed());
-
-        long t1 = System.nanoTime();
-        logger.info("Verified folder '" + folder + "' with streaming in " + ((t1 - t0) / 1_000_000) + " ms");
-
-        logger.info("--------------------");
-    }
-
-    public void parseZip(String folder) throws Exception {
-        logger.info("--------------------");
-        logger.info("Parsing zip from folder: " + folder);
-        logger.info("--------------------");
-
-        URL envelopeUrl = ClassLoader.getSystemResource(folder + "/envelope.zip");
-        File envelopeFile = new File(envelopeUrl.toURI());
-
-        var fis = new FileInputStream(envelopeFile);
-
-        StreamBuffer streamBuffer = new StreamBuffer(
-                100000,
-                DELAY_MS,
-                AVAILABILITY_DELAY_STEP_MS
-        );
-
-        MemoryMonitor memoryMonitor = new MemoryMonitor();
-
-        logger.info("Parsing zip file from folder '" + folder + "' with streaming");
-        logger.info("Heap used before parsing: " + memoryMonitor.getHeapUsed());
-
-        long t0 = System.nanoTime();
-
-        streamBuffer.copyToOutputStream(fis);
-
-        ZipUtility.getFileNames(streamBuffer.getInputStream());
-
-        logger.info("Heap used after parsing: " + memoryMonitor.getHeapUsed());
-
-        long t1 = System.nanoTime();
-        logger.info("Parsed zip file from folder '" + folder + "' with streaming in " + ((t1 - t0) / 1_000_000) + " ms");
+        long t3 = System.nanoTime();
+        logger.info("Signature of " + blobName + " has been verified in " + ((t3 - t2) / 1_000_000) + " ms");
+        logger.info("Heap used after signature verification: " + memoryMonitor.getHeapUsed());
 
         logger.info("--------------------");
     }

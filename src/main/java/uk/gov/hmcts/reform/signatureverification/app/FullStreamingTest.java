@@ -21,9 +21,5 @@ public class FullStreamingTest {
 
         streamingProcessor.verifyBlob(publicKey, "small.zip");
         streamingProcessor.verifyBlob(publicKey, "big.zip");
-//        streamingProcessor.verifySignature(publicKey, "small");
-//        streamingProcessor.parseZip("small");
-//        streamingProcessor.verifySignature(publicKey, "big");
-//        streamingProcessor.parseZip("big");
     }
 }
