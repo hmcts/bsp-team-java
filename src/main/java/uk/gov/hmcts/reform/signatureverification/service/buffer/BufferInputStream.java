@@ -1,15 +1,22 @@
 package uk.gov.hmcts.reform.signatureverification.service.buffer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import uk.gov.hmcts.reform.signatureverification.exceptions.StreamReadingException;
+
 import java.io.InputStream;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class BufferInputStream extends InputStream {
+    private static final Logger logger = LogManager.getLogger(BufferInputStream.class);
+
     private final BlockingQueue<Integer> buffer;
     private final long delay;
     private final long availabilityDelayStep;
-    int cnt = 0;
-    int c = 0;
+
+    private int cnt = 0;
+    private int c = 0;
 
     public BufferInputStream(
             BlockingQueue<Integer> buffer,
@@ -28,8 +35,8 @@ public class BufferInputStream extends InputStream {
             try {
                 Thread.sleep(availabilityDelayStep);
                 currentDelay += availabilityDelayStep;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (InterruptedException ex) {
+                logger.error(ex);
             }
         }
         return buffer.size();
@@ -42,17 +49,17 @@ public class BufferInputStream extends InputStream {
             cnt++;
             c++;
             if (c == 1000000) {
-                System.out.println("Input stream cnt: " + cnt);
+                logger.debug("Input stream cnt: " + cnt);
                 c = 0;
             }
             if (b == null) {
-                System.out.println("End input stream, cnt: " + cnt);
+                logger.debug("End input stream, cnt: " + cnt);
                 return -1;
             } else {
                 return b;
             }
-        } catch (InterruptedException e) {
-            throw new RuntimeException();
+        } catch (InterruptedException ex) {
+            throw new StreamReadingException(ex);
         }
     }
 }

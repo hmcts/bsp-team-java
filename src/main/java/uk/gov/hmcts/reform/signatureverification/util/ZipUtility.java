@@ -1,5 +1,8 @@
 package uk.gov.hmcts.reform.signatureverification.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -8,6 +11,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public final class ZipUtility {
+    private static final Logger logger = LogManager.getLogger(ZipUtility.class);
 
     private ZipUtility() {
         //
@@ -19,9 +23,9 @@ public final class ZipUtility {
         ZipInputStream zis = new ZipInputStream(is);
         ZipEntry zipEntry;
         while ((zipEntry = zis.getNextEntry()) != null) {
-            System.out.println("Zip entry: " + zipEntry.getName());
-            System.out.println("Size: " + zipEntry.getSize());
-            System.out.println("Compressed size: " + zipEntry.getCompressedSize());
+            logger.info("Zip entry: " + zipEntry.getName());
+            logger.info("Size: " + zipEntry.getSize());
+            logger.info("Compressed size: " + zipEntry.getCompressedSize());
             zipEntries.add(zipEntry.getName());
         }
 
