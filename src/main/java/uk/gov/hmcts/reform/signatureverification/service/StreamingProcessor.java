@@ -34,12 +34,12 @@ public class StreamingProcessor {
                 AVAILABILITY_DELAY_STEP_MS
         );
         StreamBuffer envelopeReadingStreamBuffer = new StreamBuffer(
-                100000,
+                STREAM_BUFFER_CAPACITY,
                 DELAY_MS,
                 AVAILABILITY_DELAY_STEP_MS
         );
         StreamBuffer envelopeVerificationStreamBuffer = new StreamBuffer(
-                100000,
+                STREAM_BUFFER_CAPACITY,
                 DELAY_MS,
                 AVAILABILITY_DELAY_STEP_MS
         );
